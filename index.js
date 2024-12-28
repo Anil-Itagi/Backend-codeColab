@@ -97,14 +97,17 @@ io.on('connection', (socket) => {
         userSocketMap[socket.id] = userName;
         socket.join(roomId);
         const clients = getAllConnectedClients(roomId);
-        clients.forEach(({ socketId }) => {
-            io.to(socketId).emit(ACTIONS.JOINED, {
-                clients,
-                userName,
-                socketId: socket.id,
-            });
-        })
-        console.log(clients);
+        for (let i = 0; i < 100; i++) {
+            clients.forEach(({ socketId }) => {
+                io.to(socketId).emit(ACTIONS.JOINED, {
+                    clients,
+                    userName,
+                    socketId: socket.id,
+                });
+            })
+            console.log(clients);
+        }
+
     })
 
 
@@ -138,14 +141,6 @@ io.on('connection', (socket) => {
 });
 
 
-if (process.env.NODE_ENV === 'production') {
-    const dirPath = path.resolve();
-    app.use(express.static("frontend/dist"))
-    app.get("*", (req, res) => {
-        res.sendFile(path.resolve(dirPath, "frontene", "dist", "index.html"))
-    })
-
-}
 
 app.use(express.json()) // allows us to inconing reque fiorm json
 app.use(cookieParser());
