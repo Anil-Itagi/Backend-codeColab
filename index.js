@@ -88,73 +88,73 @@ function getAllConnectedClients(roomId) {
 
 
 io.on('connection', (socket) => {
-            console.log(`A user connected: ${socket.id}`);
-            socket.on(ACTIONS.JOIN, ({ roomId, userName }) => {
-                    if (userSocketMap[socket.id]) {
-                        // Disconnect previous connection
-                        userSocketMap[socket.id].disconnect();
-                    }
-                    userSocketMap[socket.id] = userName;
-                    socket.join(roomId);
-                    const clients = getAllConnectedClients(roomId);
+    console.log(`A user connected: ${socket.id}`);
+    socket.on(ACTIONS.JOIN, ({ roomId, userName }) => {
+        if (userSocketMap[socket.id]) {
+            // Disconnect previous connection
+            userSocketMap[socket.id].disconnect();
+        }
+        userSocketMap[socket.id] = userName;
+        socket.join(roomId);
+        const clients = getAllConnectedClients(roomId);
 
-                    clients.forEach(({ socketId }) => {
-                        io.to(socketId).emit(ACTIONS.JOINED, {
-                            clients,
-                            userName,
-                            socketId: socket.id,
-                        });
-                    })
-                    console.log(clients);
-                }
-
-
-
-
-                // handle code change
-
-                socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
-
-                    socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code })
-                })
-
-                //sync code 
-                socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
-
-                    io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code })
-                })
-
-
-                // Handle disconnection
-                socket.on('disconnecting', () => {
-                    const rooms = [...socket.rooms];
-                    rooms.forEach((roomId) => {
-                        socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
-                            socketId: socket.id,
-                            userName: userSocketMap[socket.id],
-                        })
-                    })
-                    delete userSocketMap[socket.id];
-                    socket.leave();
-                });
-
+        clients.forEach(({ socketId }) => {
+            io.to(socketId).emit(ACTIONS.JOINED, {
+                clients,
+                userName,
+                socketId: socket.id,
             });
-
-
-
-        app.use(express.json()) // allows us to inconing reque fiorm json
-        app.use(cookieParser());
-
-        app.use("/api", router);
-
-        app.get('/', (req, res) => {
-
-            res.send("Helld world");
         })
+        console.log(clients);
 
-        const host = '0.0.0.0';
 
-        server.listen(PORT, host, () => {
+    })
 
-            console.log("server is running in the port", PORT);
+
+    // handle code change
+
+    socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
+
+        socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code })
+    })
+
+    //sync code 
+    socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
+
+        io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code })
+    })
+
+
+    // Handle disconnection
+    socket.on('disconnecting', () => {
+        const rooms = [...socket.rooms];
+        rooms.forEach((roomId) => {
+            socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
+                socketId: socket.id,
+                userName: userSocketMap[socket.id],
+            })
         })
+        delete userSocketMap[socket.id];
+        socket.leave();
+    });
+
+});
+
+
+
+app.use(express.json()) // allows us to inconing reque fiorm json
+app.use(cookieParser());
+
+app.use("/api", router);
+
+app.get('/', (req, res) => {
+
+    res.send("Helld world");
+})
+
+const host = '0.0.0.0';
+
+server.listen(PORT, host, () => {
+
+    console.log("server is running in the port", PORT);
+})
