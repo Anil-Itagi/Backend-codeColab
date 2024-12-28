@@ -157,7 +157,7 @@ app.get('/', (req, res) => {
     res.send("Helld world");
 })
 
-const host = '0.0.0.0';
+const host = '0.0.0.0/0';
 
 server.listen(PORT, host, () => {
 
