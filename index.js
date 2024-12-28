@@ -157,7 +157,9 @@ app.get('/', (req, res) => {
     res.send("Helld world");
 })
 
-server.listen(PORT, () => {
+const host = '0.0.0.0';
+
+server.listen(PORT, host, () => {
 
     console.log("server is running in the port", PORT);
 })
