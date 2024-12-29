@@ -17,7 +17,6 @@ const BASE_FRONTED_URL = process.env.FRONTEND_URL;
 
 const signup = async(req, res) => {
     const { email, password, name } = req.body;
-    console.log("in singup");
     try {
 
         if (!email || !password || !name) {
@@ -25,7 +24,7 @@ const signup = async(req, res) => {
         }
         // const userAlreadyExists = await User.findOne({ email });
         // if (userAlreadyExists) {
-        //     return res.status(400).json({ success: false, message: "User already exists" })
+        //     return res.status(200).json({ success: false, message: "User already exists" })
         // }
 
         const hashedPassword = await bcryptjs.hash(password, 10);
@@ -33,20 +32,18 @@ const signup = async(req, res) => {
         const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
         const user = new User({
-            email,
-            password: hashedPassword,
-            name,
-            verificationToken,
-            verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000,
-        })
-        // const newUser = new User({ email, name, password });
-        
-        // await newUser.save();
+                email,
+                password: hashedPassword,
+                name,
+                verificationToken,
+                verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000,
+            })
+            // const newUser = new User({ email, name, password });
 
-        // res.status(201).json({ message: "User created successfully" });
+        // await newUser.save();
         await user.save();
         generateTokenAndSetCookie(res, user._id);
-        await  sendVerificationEmail(user.email, verificationToken);
+        await sendVerificationEmail(user.email, verificationToken);
         console.log("email send successfull");
         res.status(201).json({
             success: true,
@@ -73,7 +70,7 @@ const verifyEmail = async(req, res) => {
         })
 
         if (!user) {
-            return res.status(404).json({ success: false, message: "Invalid or expired verification code" })
+            return res.status(200).json({ success: false, message: "Invalid or expired verification code" })
         }
 
         user.isVerified = true;
@@ -82,14 +79,14 @@ const verifyEmail = async(req, res) => {
         await user.save();
         await sendWelcomeEmail(user.email, user.name);
 
-       
+
         res.status(201).json({
             success: true,
             message: "Welcome email sent successfully",
         });
 
     } catch (err) {
-        return res.status(400).json({ success: false, message: error.message })
+        return res.status(400).json({ success: false, message: err.message })
     }
 }
 const login = async(req, res) => {
@@ -98,20 +95,23 @@ const login = async(req, res) => {
         const user = await User.findOne({
             email
         })
-      
+
 
         if (!user) {
-            return res.status(400).json({ success: false, message: "The email is not exists" })
+            return res.status(200).json({ success: false, message: "The email is not exists" })
         }
+
+
         if (!user.isVerified) {
 
-              await User.deleteOne({ email });
+            await User.deleteOne({ email });
 
-              return res.status(400).json({ success: false, message: "User is not verified , Signup Again" })
+            return res.status(200).json({ success: false, message: "User is not verified , Signup Again" })
         }
         const isPasswordValid = await bcryptjs.compare(password, user.password);
+
         if (!isPasswordValid) {
-            return res.status(400).json({ success: false, message: "Incurrect Password" })
+            return res.status(200).json({ success: false, message: "Incurrect Password" })
         }
 
         const token = generateTokenAndSetCookie(res, user._id);
@@ -150,7 +150,7 @@ const forgotPassword = async(req, res) => {
     try {
         const user = await User.findOne({ email })
         if (!user) {
-            return res.status(400).json({ success: false, message: "The email is not exists" })
+            return res.status(200).json({ success: false, message: "The email is not exists" })
         }
         const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
         const resetToken = crypto.randomBytes(20).toString("hex");
@@ -160,7 +160,7 @@ const forgotPassword = async(req, res) => {
         user.resetPasswordExpiresAt = resetTokenExpiresAt;
 
         await user.save();
-        console.log(BASE_FRONTED_URL+" in controoler");
+        console.log(BASE_FRONTED_URL + " in controoler");
         await sendPasswordReset(user.email, `${BASE_FRONTED_URL}/api/reset-password/${resetToken}`);
         console.log("reset password link sent successfully");
         res.status(201).json({
@@ -187,7 +187,7 @@ const resetPassword = async(req, res) => {
         })
         console.log(user)
         if (!user) {
-            return res.status(400).json({ success: false, message: "Invalid or expired reset token" })
+            return res.status(200).json({ success: false, message: "Invalid or expired reset token" })
         }
 
         const hashedPassword = await bcryptjs.hash(password, 10)
@@ -215,7 +215,7 @@ const checkAuth = async(req, res) => {
     try {
         const user = await User.findById(req.userId).select("-password");
         if (!user) {
-            return res.status(400).json({ success: false, message: "User not found" })
+            return res.status(200).json({ success: false, message: "User not found" })
         }
         res.status(200).json({ success: true, user, token: token })
     } catch (error) {
