@@ -22,10 +22,11 @@ const signup = async(req, res) => {
         if (!email || !password || !name) {
             throw new Error("All feilds are required");
         }
-        // const userAlreadyExists = await User.findOne({ email });
-        // if (userAlreadyExists) {
-        //     return res.status(200).json({ success: false, message: "User already exists" })
-        // }
+        const userAlreadyExists = await User.findOne({ email });
+        if (userAlreadyExists) {
+
+            return res.status(200).json({ success: false, message: "User already exists" })
+        }
 
         const hashedPassword = await bcryptjs.hash(password, 10);
 
